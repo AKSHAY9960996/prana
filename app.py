@@ -223,10 +223,11 @@ def students():
     all_students = query.order_by(Student.full_name).all()
     departments = Department.query.order_by(Department.id).all()
 
-    # Calculate pending dues per student
+    # Calculate pending dues per student starting from their joining month
     student_dues = {}
     for s in all_students:
-        unpaid = Fee.query.filter_by(student_id=s.id).filter(Fee.status != "paid").all()
+        join_month_str = s.date_of_join.strftime("%Y-%m") if s.date_of_join else "1900-01"
+        unpaid = Fee.query.filter_by(student_id=s.id).filter(Fee.month >= join_month_str, Fee.status != "paid").all()
         if unpaid:
             total_pending = sum(f.amount_due - f.amount_paid for f in unpaid)
             months = [month_label(f.month) for f in unpaid]
@@ -267,11 +268,15 @@ def student_detail(student_id):
     
     # Standard monthly fee from batch
     batch_fee = student.batch.monthly_fee if student.batch else 0
+    join_month_str = student.date_of_join.strftime("%Y-%m") if student.date_of_join else "1900-01"
     
-    # Load 12 months for selected year
+    # Load months for selected year starting ONLY from student's join month onwards
     months_data = []
     for m in range(1, 13):
         mstr = f"{year:04d}-{m:02d}"
+        if mstr < join_month_str:
+            continue  # Do not track fees for months prior to student joining date!
+            
         fee_rec = Fee.query.filter_by(student_id=student.id, month=mstr).first()
         due = fee_rec.amount_due if fee_rec else batch_fee
         paid = fee_rec.amount_paid if fee_rec else 0
@@ -456,15 +461,17 @@ def settings_reset_all():
 def student_bill(student_id):
     student = Student.query.get_or_404(student_id)
     this_month = current_month_str()
+    join_month_str = student.date_of_join.strftime("%Y-%m") if student.date_of_join else "1900-01"
     
     # Selected month fee
     current_fee = Fee.query.filter_by(student_id=student.id, month=this_month).first()
     current_due = current_fee.amount_due if current_fee else student.batch.monthly_fee
     current_paid = current_fee.amount_paid if current_fee else 0
-    current_pending = max(0, current_due - current_paid)
+    current_pending = max(0, current_due - current_paid) if this_month >= join_month_str else 0
     
-    # Previous months' pending fees
+    # Previous months' pending fees (only for months after or equal to join date)
     past_unpaid = Fee.query.filter_by(student_id=student.id).filter(
+        Fee.month >= join_month_str,
         Fee.month < this_month,
         Fee.status != "paid"
     ).order_by(Fee.month.asc()).all()
@@ -483,8 +490,8 @@ def student_bill(student_id):
     total_past_pending = sum(p["pending"] for p in past_dues_list)
     grand_total_pending = current_pending + total_past_pending
     
-    # All fee history for ledger
-    all_fees = Fee.query.filter_by(student_id=student.id).order_by(Fee.month.desc()).all()
+    # All fee history for ledger (only from join month onwards)
+    all_fees = Fee.query.filter_by(student_id=student.id).filter(Fee.month >= join_month_str).order_by(Fee.month.desc()).all()
     
     return render_template(
         "student_bill.html",
@@ -516,7 +523,8 @@ def api_students(batch_id):
     students_ = Student.query.filter_by(batch_id=batch_id, active=True).order_by(Student.full_name).all()
     result = []
     for s in students_:
-        unpaid = Fee.query.filter_by(student_id=s.id).filter(Fee.status != "paid").all()
+        join_month_str = s.date_of_join.strftime("%Y-%m") if s.date_of_join else "1900-01"
+        unpaid = Fee.query.filter_by(student_id=s.id).filter(Fee.month >= join_month_str, Fee.status != "paid").all()
         total_pending = sum(f.amount_due - f.amount_paid for f in unpaid)
         unpaid_months = [{"month": f.month, "label": month_label(f.month), "due": f.amount_due - f.amount_paid, "amount_due": f.amount_due, "amount_paid": f.amount_paid} for f in unpaid]
         result.append({
@@ -531,7 +539,9 @@ def api_students(batch_id):
 
 @app.route("/api/student/<int:student_id>/unpaid")
 def api_student_unpaid(student_id):
-    unpaid = Fee.query.filter_by(student_id=student_id).filter(Fee.status != "paid").order_by(Fee.month.asc()).all()
+    student = Student.query.get_or_404(student_id)
+    join_month_str = student.date_of_join.strftime("%Y-%m") if student.date_of_join else "1900-01"
+    unpaid = Fee.query.filter_by(student_id=student_id).filter(Fee.month >= join_month_str, Fee.status != "paid").order_by(Fee.month.asc()).all()
     return jsonify([
         {
             "id": f.id,
@@ -597,6 +607,8 @@ def batch_fees_page(batch_id):
     total_prev_dues_sum = 0
     
     for s in students_in_batch:
+        join_month_str = s.date_of_join.strftime("%Y-%m") if s.date_of_join else "1900-01"
+        
         # Current month fee record
         fee_rec = Fee.query.filter_by(student_id=s.id, month=month).first()
         due = fee_rec.amount_due if fee_rec else batch.monthly_fee
@@ -610,8 +622,9 @@ def batch_fees_page(batch_id):
         else:
             status = "unpaid"
 
-        # Calculate previous months' pending dues (where Fee.month < current selected month)
+        # Calculate previous months' pending dues (only starting from joining month up to current selected month)
         past_unpaid_fees = Fee.query.filter_by(student_id=s.id).filter(
+            Fee.month >= join_month_str,
             Fee.month < month,
             Fee.status != "paid"
         ).order_by(Fee.month.asc()).all()
