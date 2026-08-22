@@ -142,8 +142,11 @@
                 Pay {{ first_prev.month_label }} (₹{{ first_prev.pending }})
               </button>
               {% endif %}
-              <a href="{{ url_for('student_bill', student_id=s.id) }}" target="_blank" class="btn btn-sm" style="background:#25d366;color:#fff;font-weight:700;border:none;text-decoration:none;" title="View & Send WhatsApp Bill">
-                📱 Bill Link
+              <button type="button" class="btn btn-sm" style="background:#25d366;color:#fff;font-weight:700;border:none;" onclick="sendWhatsAppInvoice('{{ s.full_name }}', '{{ s.mobile }}', {{ item.pending + item.total_past_pending }}, {{ s.id }})" title="Send Invoice via WhatsApp">
+                📲 Send Invoice
+              </button>
+              <a href="{{ url_for('student_bill', student_id=s.id) }}" target="_blank" class="btn btn-outline btn-sm" title="View Digital Bill">
+                📄 View Bill
               </a>
               <button type="button" class="btn btn-outline btn-sm" onclick="openPaymentModal({{ s.id }}, '{{ s.full_name }}', '{{ month }}', {{ item.due }}, {{ item.paid }})">
                 Update {{ month_label }}
@@ -199,6 +202,16 @@
 </div>
 
 <script>
+function sendWhatsAppInvoice(studentName, mobile, pendingAmount, studentId) {
+  const domain = window.location.origin;
+  const billUrl = domain + '/bill/' + studentId;
+  const cleanPhone = mobile.replace(/[^0-9]/g, '');
+  const phoneWithCode = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
+  const msg = `Hello ${studentName},\n\nHere is your monthly fee statement & invoice from *Prana Space of Art*:\n\n📌 Total Balance Due: ₹${pendingAmount}\n\nView full statement & payment history here:\n${billUrl}\n\nThank you!\nPrana Space of Art`;
+  const waUrl = `https://api.whatsapp.com/send?phone=${phoneWithCode}&text=${encodeURIComponent(msg)}`;
+  window.open(waUrl, '_blank');
+}
+
 function setStatusFilter(status) {
   document.getElementById('statusFilterInput').value = status;
   document.getElementById('filterForm').submit();
