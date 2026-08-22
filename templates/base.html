@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Dashboard{% endblock %} · Prana Space of Art</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="app-shell">
+
+  <div class="overlay" id="overlay"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <svg class="logo-mark" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="lotusGrad" x1="0" y1="0" x2="48" y2="48">
+            <stop offset="0%" stop-color="#ec4899"/>
+            <stop offset="100%" stop-color="#8b5cf6"/>
+          </linearGradient>
+        </defs>
+        <path d="M24 44c-8-3-13-10-13-18 5 2 9 6 13 12 4-6 8-10 13-12 0 8-5 15-13 18z" fill="url(#lotusGrad)"/>
+        <path d="M24 26c-6-4-9-10-8-17 6 1 11 5 13 11 2-6 7-10 13-11 1 7-2 13-8 17-2-2-4-2-5 0-1-2-3-2-5 0z" fill="url(#lotusGrad)" opacity="0.85"/>
+      </svg>
+      <div class="brand-text">
+        <div class="brand-name">PRANA</div>
+        <div class="brand-sub">space of art</div>
+      </div>
+    </div>
+
+    <div class="nav-label">MAIN MENU</div>
+    <a href="{{ url_for('dashboard') }}" class="nav-item {{ 'active' if active_page=='dashboard' }}" title="Dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+      <span class="nav-text">Dashboard</span>
+    </a>
+    <a href="{{ url_for('students') }}" class="nav-item {{ 'active' if active_page=='students' }}" title="Students">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+      <span class="nav-text">Students</span>
+    </a>
+    <a href="{{ url_for('departments_page') }}" class="nav-item {{ 'active' if active_page=='departments' }}" title="Departments">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>
+      <span class="nav-text">Departments</span>
+    </a>
+    <a href="{{ url_for('settings') }}" class="nav-item {{ 'active' if active_page=='batches' or active_page=='settings' }}" title="Batches">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      <span class="nav-text">Batches</span>
+    </a>
+    <a href="{{ url_for('fees_page') }}" class="nav-item {{ 'active' if active_page=='fees' }}" title="Fees">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l3 3v15H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+      <span class="nav-text">Fees</span>
+    </a>
+    <a href="{{ url_for('attendance_page') }}" class="nav-item {{ 'active' if active_page=='attendance' }}" title="Attendance">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+      <span class="nav-text">Attendance</span>
+    </a>
+    <a href="{{ url_for('pl_statements') }}" class="nav-item {{ 'active' if active_page=='pl_statements' }}" title="PL Statements">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3h8l4 4v14H7z"/><path d="M11 12h6M11 16h6M11 8h2"/></svg>
+      <span class="nav-text">PL Statements</span>
+    </a>
+    <a href="#" class="nav-item" title="Reports">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5a2 2 0 012-2h9l5 5v11a2 2 0 01-2 2H6a2 2 0 01-2-2z"/><path d="M8 10h8M8 14h5"/></svg>
+      <span class="nav-text">Reports</span>
+    </a>
+    <a href="{{ url_for('settings') }}" class="nav-item {{ 'active' if active_page=='settings' }}" title="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.6V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.6-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.6-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.6V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.6 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.6 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.6 1z"/></svg>
+      <span class="nav-text">Settings</span>
+    </a>
+
+    <div class="sidebar-footer">
+      <div class="avatar-circle">A</div>
+      <div class="user-text">
+        <div class="name">Admin</div>
+        <div class="role">Administrator</div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" id="hamburgerBtn">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#211d3d" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <div>
+          <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+          <p class="page-subtitle">{% block page_subtitle %}Welcome back, Admin!{% endblock %}</p>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-outline btn-sm" style="display:flex;">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>
+          Send Report
+        </button>
+        <button class="icon-btn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#211d3d" stroke-width="2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg><span class="dot"></span></button>
+      </div>
+    </header>
+
+    <main class="content">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+<nav class="mobile-bottom-nav">
+  <a class="mb-item {{ 'active' if active_page=='dashboard' }}" href="{{ url_for('dashboard') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+    Home
+  </a>
+  <a class="mb-item {{ 'active' if active_page=='students' }}" href="{{ url_for('students') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+    Students
+  </a>
+  <a class="mb-item {{ 'active' if active_page=='fees' }}" href="{{ url_for('fees_page') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l3 3v15H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+    Fees
+  </a>
+  <a class="mb-item {{ 'active' if active_page=='attendance' }}" href="{{ url_for('attendance_page') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+    Attendance
+  </a>
+  <a class="mb-item {{ 'active' if active_page=='settings' or active_page=='pl_statements' }}" href="{{ url_for('settings') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+    More
+  </a>
+</nav>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+prana.db
+instance/
+.env
+scratch/
+.venv/
+venv/
+.idea/
+.vscode/

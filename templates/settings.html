@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block page_title %}Settings{% endblock %}
+{% block page_subtitle %}Manage batch timings & monthly fees{% endblock %}
+
+{% block content %}
+<form method="post">
+  {% for d in departments %}
+  <div class="settings-dept">
+    <div class="settings-dept-title">
+      <div class="dept-icon icon-{{ d.color }}" style="width:32px;height:32px;">
+        {% if d.icon == 'dance' %}
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="4" r="2"/><path d="M12 6v6M12 12l-5 7M12 12l5 7M8 10l-5-2M16 10l5-2"/></svg>
+        {% elif d.icon == 'western' %}
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="4" r="2"/><path d="M12 6v5M12 11l-6 9M12 11l6 9M6 15h12"/></svg>
+        {% else %}
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        {% endif %}
+      </div>
+      {{ d.name }}
+    </div>
+
+    {% for b in d.batches %}
+    <div class="settings-batch-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <strong style="font-size:14px;">{{ b.name }}</strong>
+        <button type="button" class="btn btn-outline btn-sm" style="color:#dc2626;border-color:#fecaca;"
+          onclick="if(confirm('Delete {{ b.name }}?')){document.getElementById('del-{{ b.id }}').submit();}">Delete</button>
+      </div>
+      <div class="settings-batch-grid">
+        <div class="form-group" style="margin-bottom:0;">
+          <label>Days</label>
+          <input class="form-control" name="batch_{{ b.id }}_days" value="{{ b.days }}" placeholder="e.g. Mon, Wed, Fri">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label>Start Time</label>
+          <input class="form-control" name="batch_{{ b.id }}_start" value="{{ b.start_time }}" placeholder="5:00 PM">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label>End Time</label>
+          <input class="form-control" name="batch_{{ b.id }}_end" value="{{ b.end_time }}" placeholder="6:00 PM">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label>Monthly Fee (₹)</label>
+          <input class="form-control" type="number" name="batch_{{ b.id }}_fee" value="{{ b.monthly_fee }}">
+        </div>
+      </div>
+    </div>
+    <form id="del-{{ b.id }}" method="post" action="{{ url_for('batch_delete', batch_id=b.id) }}" style="display:none;"></form>
+    {% else %}
+    <p style="color:var(--text-muted);font-size:13px;">No batches yet.</p>
+    {% endfor %}
+
+    <details style="margin-top:6px;">
+      <summary style="cursor:pointer;font-size:13px;color:var(--accent-purple-dark);font-weight:700;">+ Add batch to {{ d.name }}</summary>
+      <form method="post" action="{{ url_for('batch_new') }}" style="display:flex;gap:10px;margin-top:10px;">
+        <input type="hidden" name="department_id" value="{{ d.id }}">
+        <input class="form-control" name="name" placeholder="e.g. Batch 4" required>
+        <button type="submit" class="btn btn-outline btn-sm">Add</button>
+      </form>
+    </details>
+  </div>
+  {% endfor %}
+
+  <button type="submit" class="btn btn-gradient btn-block">Save Settings</button>
+</form>
+{% endblock %}

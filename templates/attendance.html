@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Attendance{% endblock %}
+{% block page_title %}Attendance{% endblock %}
+{% block page_subtitle %}Mark daily attendance by batch{% endblock %}
+
+{% block content %}
+<div class="card card-pad" style="margin-bottom:18px;">
+  <form method="get" style="display:flex;gap:12px;flex-wrap:wrap;align-items:end;">
+    <div class="form-group" style="flex:1;min-width:220px;margin-bottom:0;">
+      <label>Batch</label>
+      <select class="form-control" name="batch_id" onchange="this.form.submit()">
+        {% for d in departments %}
+          <optgroup label="{{ d.name }}">
+          {% for b in d.batches %}
+            <option value="{{ b.id }}" {{ 'selected' if b.id == batch_id }}>{{ b.name }} — {{ b.timing_label }}</option>
+          {% endfor %}
+          </optgroup>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:0;">
+      <label>Date</label>
+      <input class="form-control" type="date" name="date" value="{{ session_date.isoformat() }}" onchange="this.form.submit()">
+    </div>
+  </form>
+</div>
+
+{% if students %}
+<form method="post" action="{{ url_for('attendance_save') }}">
+  <input type="hidden" name="batch_id" value="{{ batch_id }}">
+  <input type="hidden" name="date" value="{{ session_date.isoformat() }}">
+
+  <div class="card card-pad">
+    {% for s in students %}
+    {% set is_present = existing.get(s.id, true) %}
+    <div class="attendance-row">
+      <div class="list-avatar">{{ s.initials }}</div>
+      <div>
+        <div class="list-title">{{ s.full_name }}</div>
+        <div class="list-sub">{{ s.mobile }}</div>
+      </div>
+      <div class="attendance-toggle">
+        <input type="hidden" name="present_{{ s.id }}" id="hidden_{{ s.id }}" value="{{ 'on' if is_present else '' }}">
+        <button type="button" class="toggle-btn present {{ 'on' if is_present }}" onclick="setPresence({{ s.id }}, true, this)">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+        </button>
+        <button type="button" class="toggle-btn absent {{ 'on' if not is_present }}" onclick="setPresence({{ s.id }}, false, this)">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <button type="submit" class="btn btn-gradient btn-block" style="margin-top:18px;">Save Attendance</button>
+</form>
+{% else %}
+<div class="card empty-state">
+  <div class="es-icon">
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+  </div>
+  <p>No students in this batch yet.</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function setPresence(studentId, present, btn) {
+  document.getElementById('hidden_' + studentId).value = present ? 'on' : '';
+  const row = btn.closest('.attendance-toggle');
+  row.querySelector('.present').classList.toggle('on', present);
+  row.querySelector('.absent').classList.toggle('on', !present);
+}
+</script>
+{% endblock %}

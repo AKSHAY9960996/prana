@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit Student' if student else 'Add Student' }}{% endblock %}
+{% block page_title %}{{ 'Edit Student' if student else 'Add Student' }}{% endblock %}
+{% block page_subtitle %}{{ 'Update student details' if student else 'Enroll a new student' }}{% endblock %}
+
+{% block content %}
+<div class="card card-pad" style="max-width:520px;">
+  <div style="text-align:center;margin-bottom:22px;">
+    <div class="avatar-circle" style="width:72px;height:72px;font-size:24px;margin:0 auto 8px;">
+      {{ student.initials if student else '+' }}
+    </div>
+    <span style="font-size:13px;font-weight:700;color:var(--accent-purple-dark);">Add Photo</span>
+  </div>
+
+  <form method="post">
+    <div class="form-group">
+      <label>Full Name *</label>
+      <input class="form-control" type="text" name="full_name" required placeholder="Enter full name"
+        value="{{ student.full_name if student else '' }}">
+    </div>
+    <div class="form-group">
+      <label>Mobile Number *</label>
+      <input class="form-control" type="tel" name="mobile" required placeholder="Enter mobile number"
+        value="{{ student.mobile if student else '' }}">
+    </div>
+    <div class="form-group">
+      <label>Address</label>
+      <textarea class="form-control" name="address" rows="2" placeholder="Enter residential address">{{ student.address if student else '' }}</textarea>
+    </div>
+    <div class="form-group">
+      <label>Department *</label>
+      <select class="form-control" name="department_id" id="departmentSelect" required onchange="loadBatchOptions()">
+        <option value="">Select department</option>
+        {% for d in departments %}
+        <option value="{{ d.id }}" {{ 'selected' if student and student.department_id == d.id }}>{{ d.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Batch *</label>
+      <select class="form-control" name="batch_id" id="batchSelect" required>
+        {% if student %}
+        <option value="{{ student.batch_id }}" selected>{{ student.batch.name }}</option>
+        {% else %}
+        <option value="">Select department first</option>
+        {% endif %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Date of Join</label>
+      <input class="form-control" type="date" name="date_of_join"
+        value="{{ student.date_of_join.isoformat() if student else today.isoformat() }}">
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <a href="{{ url_for('students') }}" class="btn btn-outline btn-block">Cancel</a>
+      <button type="submit" class="btn btn-gradient btn-block">Save</button>
+    </div>
+  </form>
+</div>
+
+<script>
+async function loadBatchOptions(preselect) {
+  const deptId = document.getElementById('departmentSelect').value;
+  const batchSelect = document.getElementById('batchSelect');
+  batchSelect.innerHTML = '<option value="">Loading...</option>';
+  if (!deptId) { batchSelect.innerHTML = '<option value="">Select department first</option>'; return; }
+  const res = await fetch(`/api/batches/${deptId}`);
+  const batches = await res.json();
+  batchSelect.innerHTML = '<option value="">Select batch</option>' + batches.map(b =>
+    `<option value="${b.id}" ${preselect == b.id ? 'selected' : ''}>${b.name} (${b.timing})</option>`
+  ).join('');
+}
+{% if student %}
+loadBatchOptions({{ student.batch_id }});
+{% endif %}
+</script>
+{% endblock %}

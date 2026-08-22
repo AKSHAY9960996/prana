@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}PL Statements{% endblock %}
+{% block page_title %}PL Statement{% endblock %}
+{% block page_subtitle %}{{ month_label }}{% endblock %}
+
+{% block content %}
+<form method="get" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+  <input class="form-control" type="month" name="month" value="{{ month }}" style="max-width:200px;" onchange="this.form.submit()">
+  <select class="form-control" name="batch_id" style="max-width:220px;" onchange="this.form.submit()">
+    <option value="">All Batches</option>
+    {% for b in batches %}
+    <option value="{{ b.id }}" {{ 'selected' if b.id == batch_id }}>{{ b.department.name }} — {{ b.name }}</option>
+    {% endfor %}
+  </select>
+</form>
+
+<div class="summary-grid">
+  <div class="summary-box">
+    <div class="sb-label">Total Collection</div>
+    <div class="sb-value">₹ {{ total_collection }}</div>
+  </div>
+  <div class="summary-box">
+    <div class="sb-label">Total Fees</div>
+    <div class="sb-value">₹ {{ total_fees }}</div>
+  </div>
+  <div class="summary-box">
+    <div class="sb-label">Total Paid</div>
+    <div class="sb-value" style="color:#059669;">₹ {{ total_paid }}</div>
+  </div>
+  <div class="summary-box">
+    <div class="sb-label">Total Unpaid</div>
+    <div class="sb-value" style="color:#dc2626;">₹ {{ total_unpaid }}</div>
+  </div>
+</div>
+
+<div class="card card-pad">
+  {% for fee, student, batch in rows %}
+  <div class="list-row">
+    <div class="list-avatar">{{ student.initials }}</div>
+    <div class="list-main">
+      <div class="list-title">{{ student.full_name }}</div>
+      <div class="list-sub">{{ student.department.name }} • {{ batch.name }}</div>
+    </div>
+    <div class="list-meta">
+      <div>Paid: ₹{{ fee.amount_paid }} / ₹{{ fee.amount_due }}</div>
+      <div style="color:{{ '#dc2626' if fee.amount_due - fee.amount_paid > 0 else '#059669' }};">Due: ₹{{ fee.amount_due - fee.amount_paid }}</div>
+    </div>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="es-icon">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3h8l4 4v14H7z"/><path d="M11 12h6M11 16h6M11 8h2"/></svg>
+    </div>
+    <p>No fee records for this month yet.</p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

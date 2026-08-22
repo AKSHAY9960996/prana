@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}{{ student.full_name }} — Details{% endblock %}
+{% block page_title %}{{ student.full_name }}{% endblock %}
+{% block page_subtitle %}{{ student.department.name }} • {{ student.batch.name }}{% endblock %}
+
+{% block content %}
+<div style="display:flex;gap:12px;margin-bottom:20px;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+  <a href="{{ url_for('students') }}" class="btn btn-outline btn-sm">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Back to Students
+  </a>
+  <div style="display:flex;gap:10px;">
+    <a href="{{ url_for('student_edit', student_id=student.id) }}" class="btn btn-outline btn-sm">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Edit Student
+    </a>
+  </div>
+</div>
+
+<!-- Student Profile Overview -->
+<div class="card card-pad" style="margin-bottom:24px;">
+  <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;">
+    <div class="avatar-circle" style="width:68px;height:68px;font-size:24px;flex-shrink:0;">
+      {{ student.initials }}
+    </div>
+    <div style="flex:1;min-width:240px;">
+      <h2 style="margin:0 0 4px;font-size:20px;font-weight:800;">{{ student.full_name }}</h2>
+      <div style="color:var(--text-muted);font-size:13.5px;margin-bottom:12px;">
+        {{ student.department.name }} — <strong>{{ student.batch.name }}</strong> ({{ student.batch.timing_label }})
+      </div>
+      
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:14px;font-size:13.5px;background:#fbfaff;padding:14px 16px;border-radius:14px;border:1px solid var(--border);">
+        <div>
+          <span style="color:var(--text-muted);font-size:11.5px;display:block;font-weight:700;text-transform:uppercase;">Mobile Number</span>
+          <strong>{{ student.mobile }}</strong>
+        </div>
+        <div>
+          <span style="color:var(--text-muted);font-size:11.5px;display:block;font-weight:700;text-transform:uppercase;">Residential Address</span>
+          <strong>{{ student.address if student.address else 'Not specified' }}</strong>
+        </div>
+        <div>
+          <span style="color:var(--text-muted);font-size:11.5px;display:block;font-weight:700;text-transform:uppercase;">Date of Join</span>
+          <strong>{{ student.date_of_join.strftime('%b %d, %Y') }}</strong>
+        </div>
+        <div>
+          <span style="color:var(--text-muted);font-size:11.5px;display:block;font-weight:700;text-transform:uppercase;">Monthly Fee</span>
+          <strong style="color:var(--accent-purple-dark);">₹{{ student.batch.monthly_fee }} / month</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Yearly Fee Ledger -->
+<div class="card card-pad">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h3 class="card-title">Fee Ledger & Payment Matrix</h3>
+      <div style="font-size:12.5px;color:var(--text-muted);margin-top:2px;">Track and update monthly payments for {{ year }}</div>
+    </div>
+    <form method="get" style="display:flex;align-items:center;gap:8px;">
+      <label style="font-size:13px;font-weight:700;">Year:</label>
+      <select class="form-control" name="year" onchange="this.form.submit()" style="width:auto;padding:6px 12px;">
+        {% for y in range(2024, 2028) %}
+        <option value="{{ y }}" {{ 'selected' if y == year }}>{{ y }}</option>
+        {% endfor %}
+      </select>
+    </form>
+  </div>
+
+  <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:13.5px;">
+      <thead>
+        <tr style="border-bottom:2px solid var(--border);text-align:left;color:var(--text-muted);font-size:12px;text-transform:uppercase;">
+          <th style="padding:10px;">Month</th>
+          <th style="padding:10px;">Monthly Fee</th>
+          <th style="padding:10px;">Amount Paid</th>
+          <th style="padding:10px;">Balance Due</th>
+          <th style="padding:10px;">Status</th>
+          <th style="padding:10px;text-align:right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in months_data %}
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:12px 10px;font-weight:700;">
+            {{ m.month_name }} {{ year }}
+            <span style="display:block;font-size:11px;color:var(--text-muted);">{{ m.month }}</span>
+          </td>
+          <td style="padding:12px 10px;">₹{{ m.due }}</td>
+          <td style="padding:12px 10px;font-weight:700;color:{{ '#059669' if m.paid > 0 else 'inherit' }};">₹{{ m.paid }}</td>
+          <td style="padding:12px 10px;font-weight:700;color:{{ '#dc2626' if m.pending > 0 else '#059669' }};">₹{{ m.pending }}</td>
+          <td style="padding:12px 10px;">
+            {% if m.status == 'paid' %}
+            <span class="chip chip-paid">Paid</span>
+            {% elif m.status == 'partial' %}
+            <span class="chip" style="background:#fef3c7;color:#d97706;">Partial (₹{{ m.pending }} Due)</span>
+            {% else %}
+            <span class="chip chip-unpaid">Unpaid</span>
+            {% endif %}
+          </td>
+          <td style="padding:12px 10px;text-align:right;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="openPaymentModal('{{ m.month }}', {{ m.due }}, {{ m.paid }})">
+              Update Fee
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Quick Fee Update Modal -->
+<div class="overlay" id="payModalOverlay"></div>
+<div class="card card-pad" id="payModal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:110;width:90%;max-width:440px;box-shadow:0 10px 40px rgba(0,0,0,0.25);">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <h4 style="margin:0;font-size:16px;font-weight:800;">Update Fee Payment</h4>
+    <button type="button" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);" onclick="closePaymentModal()">&times;</button>
+  </div>
+
+  <form method="post" action="{{ url_for('fee_add') }}">
+    <input type="hidden" name="student_id" value="{{ student.id }}">
+    <input type="hidden" name="month" id="modalMonthStr">
+    <input type="hidden" name="next_url" value="{{ request.url }}">
+
+    <div class="form-group">
+      <label>Month</label>
+      <input class="form-control" type="text" id="modalMonthDisplay" readonly style="background:#f8f7fc;">
+    </div>
+    <div class="form-group">
+      <label>Monthly Fee Amount Due (₹)</label>
+      <input class="form-control" type="number" name="amount_due" id="modalAmountDue" required>
+    </div>
+    <div class="form-group">
+      <label>Amount Paid by Student (₹)</label>
+      <input class="form-control" type="number" name="amount_paid" id="modalAmountPaid" placeholder="e.g. 300" required>
+      <small style="color:var(--text-muted);font-size:11.5px;display:block;margin-top:4px;">
+        Example: If fee is ₹400 and student pays ₹300, enter 300. Status will automatically be marked as <strong>Partial (₹100 Due)</strong>.
+      </small>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button type="button" class="btn btn-outline btn-block" onclick="closePaymentModal()">Cancel</button>
+      <button type="submit" class="btn btn-gradient btn-block">Save Fee</button>
+    </div>
+  </form>
+</div>
+
+<script>
+function openPaymentModal(monthStr, due, paid) {
+  document.getElementById('modalMonthStr').value = monthStr;
+  document.getElementById('modalMonthDisplay').value = monthStr;
+  document.getElementById('modalAmountDue').value = due;
+  document.getElementById('modalAmountPaid').value = paid || due;
+  document.getElementById('payModalOverlay').style.display = 'block';
+  document.getElementById('payModal').style.display = 'block';
+}
+
+function closePaymentModal() {
+  document.getElementById('payModalOverlay').style.display = 'none';
+  document.getElementById('payModal').style.display = 'none';
+}
+
+document.getElementById('payModalOverlay').addEventListener('click', closePaymentModal);
+</script>
+{% endblock %}

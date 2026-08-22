@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Students{% endblock %}
+{% block page_title %}Students{% endblock %}
+{% block page_subtitle %}{{ students|length }} student{{ 's' if students|length != 1 }} enrolled{% endblock %}
+
+{% block content %}
+<div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+  <a href="{{ url_for('student_new') }}" class="btn btn-gradient">
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+    Add Student
+  </a>
+</div>
+
+<form method="get" class="search-bar">
+  <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#7a7595" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+  <input type="text" name="q" value="{{ q }}" placeholder="Search students by name or phone...">
+  <select name="department_id" class="form-control" style="width:auto;padding:8px 12px;" onchange="this.form.submit()">
+    <option value="">All Departments</option>
+    {% for d in departments %}
+    <option value="{{ d.id }}" {{ 'selected' if dept_id == d.id }}>{{ d.name }}</option>
+    {% endfor %}
+  </select>
+</form>
+
+{% if students %}
+  {% for s in students %}
+  <a href="{{ url_for('student_edit', student_id=s.id) }}" class="list-row">
+    <div class="list-avatar">{{ s.initials }}</div>
+    <div class="list-main">
+      <div class="list-title">{{ s.full_name }}</div>
+      <div class="list-sub">{{ s.department.name }} • {{ s.batch.name }} · {{ s.mobile }}</div>
+    </div>
+    {% if student_dues and s.id in student_dues %}
+    <div style="margin-right:12px;text-align:right;">
+      <span class="chip chip-unpaid">Pending: ₹{{ student_dues[s.id]['total'] }}</span>
+      <div style="font-size:11px;color:#dc2626;margin-top:2px;">{{ student_dues[s.id]['months'] }}</div>
+    </div>
+    {% endif %}
+    <form method="post" action="{{ url_for('student_delete', student_id=s.id) }}" onclick="event.stopPropagation()" onsubmit="return confirm('Remove {{ s.full_name }}?')">
+      <button type="submit" class="icon-btn" style="border:none;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#dc2626" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+      </button>
+    </form>
+  </a>
+  {% endfor %}
+{% else %}
+  <div class="card empty-state">
+    <div class="es-icon">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+    </div>
+    <p>No students found. Add your first student to get started.</p>
+  </div>
+{% endif %}
+{% endblock %}
