@@ -27,22 +27,34 @@ db.init_app(app)
 
 
 def init_db():
-    with app.app_context():
-        db.create_all()
-        # Seed starter departments if database is brand new
-        if Department.query.count() == 0:
-            classic = Department(name="Classic Dance", tagline="Bharatanatyam & Classical", icon="dance", color="pink")
-            western = Department(name="Western Dance", tagline="Contemporary, Hip-hop, etc.", icon="western", color="purple")
-            carnatic = Department(name="Carnatic Music", tagline="Vocal & Instrumental", icon="music", color="orange")
-            db.session.add_all([classic, western, carnatic])
-            db.session.flush()
+    try:
+        with app.app_context():
+            db.create_all()
+            # Seed starter departments if database is brand new
+            if Department.query.count() == 0:
+                classic = Department(name="Classic Dance", tagline="Bharatanatyam & Classical", icon="dance", color="pink")
+                western = Department(name="Western Dance", tagline="Contemporary, Hip-hop, etc.", icon="western", color="purple")
+                carnatic = Department(name="Carnatic Music", tagline="Vocal & Instrumental", icon="music", color="orange")
+                db.session.add_all([classic, western, carnatic])
+                db.session.flush()
 
-            b1 = Batch(department_id=classic.id, name="Batch 1")
-            b2 = Batch(department_id=classic.id, name="Batch 2")
-            b3 = Batch(department_id=classic.id, name="Batch 3")
-            wb1 = Batch(department_id=western.id, name="Batch 1")
-            cb1 = Batch(department_id=carnatic.id, name="Batch 1")
-init_db()
+                b1 = Batch(department_id=classic.id, name="Batch 1")
+                b2 = Batch(department_id=classic.id, name="Batch 2")
+                b3 = Batch(department_id=classic.id, name="Batch 3")
+                wb1 = Batch(department_id=western.id, name="Batch 1")
+                cb1 = Batch(department_id=carnatic.id, name="Batch 1")
+                db.session.add_all([b1, b2, b3, wb1, cb1])
+                db.session.commit()
+    except Exception as e:
+        print("Database init info:", e)
+
+_db_initialized = False
+@app.before_request
+def ensure_db_initialized():
+    global _db_initialized
+    if not _db_initialized:
+        init_db()
+        _db_initialized = True
 
 
 # ---------- Lightweight Render Keep-Alive (NO Database Hit) ----------
