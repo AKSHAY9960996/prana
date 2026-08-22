@@ -438,7 +438,7 @@ def fees_page():
 def batch_fees_page(batch_id):
     batch = Batch.query.get_or_404(batch_id)
     month = request.args.get("month") or current_month_str()
-    status_filter = request.args.get("status", "all")  # all | paid | partial | unpaid
+    status_filter = request.args.get("status", "all")  # all | paid | partial | unpaid | prev_dues
     
     # All active students in batch
     students_in_batch = Student.query.filter_by(batch_id=batch.id, active=True).order_by(Student.full_name).all()
@@ -447,8 +447,10 @@ def batch_fees_page(batch_id):
     total_due_sum = 0
     total_paid_sum = 0
     total_pending_sum = 0
+    total_prev_dues_sum = 0
     
     for s in students_in_batch:
+        # Current month fee record
         fee_rec = Fee.query.filter_by(student_id=s.id, month=month).first()
         due = fee_rec.amount_due if fee_rec else batch.monthly_fee
         paid = fee_rec.amount_paid if fee_rec else 0
@@ -460,6 +462,27 @@ def batch_fees_page(batch_id):
             status = "partial"
         else:
             status = "unpaid"
+
+        # Calculate previous months' pending dues (where Fee.month < current selected month)
+        past_unpaid_fees = Fee.query.filter_by(student_id=s.id).filter(
+            Fee.month < month,
+            Fee.status != "paid"
+        ).order_by(Fee.month.asc()).all()
+        
+        past_dues_list = [
+            {
+                "fee_id": f.id,
+                "month": f.month,
+                "month_label": month_label(f.month),
+                "amount_due": f.amount_due,
+                "amount_paid": f.amount_paid,
+                "pending": f.amount_due - f.amount_paid
+            }
+            for f in past_unpaid_fees if (f.amount_due - f.amount_paid) > 0
+        ]
+        
+        total_past_pending = sum(p["pending"] for p in past_dues_list)
+        total_prev_dues_sum += total_past_pending
             
         total_due_sum += due
         total_paid_sum += paid
@@ -469,7 +492,9 @@ def batch_fees_page(batch_id):
         if status_filter != "all":
             if status_filter == "pending" and status not in ("partial", "unpaid"):
                 continue
-            elif status_filter != "pending" and status != status_filter:
+            elif status_filter == "prev_dues" and total_past_pending == 0:
+                continue
+            elif status_filter not in ("pending", "prev_dues") and status != status_filter:
                 continue
                 
         student_records.append({
@@ -478,7 +503,9 @@ def batch_fees_page(batch_id):
             "paid": paid,
             "pending": pending,
             "status": status,
-            "fee_id": fee_rec.id if fee_rec else None
+            "fee_id": fee_rec.id if fee_rec else None,
+            "past_dues": past_dues_list,
+            "total_past_pending": total_past_pending
         })
         
     return render_template(
@@ -492,6 +519,7 @@ def batch_fees_page(batch_id):
         total_due_sum=total_due_sum,
         total_paid_sum=total_paid_sum,
         total_pending_sum=total_pending_sum,
+        total_prev_dues_sum=total_prev_dues_sum,
         active_page="fees"
     )
 

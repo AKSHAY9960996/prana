@@ -36,6 +36,9 @@
       <button type="button" class="btn btn-sm {{ 'btn-gradient' if status_filter == 'unpaid' else 'btn-outline' }}" style="{{ 'color:#dc2626;border-color:#fecaca;' if status_filter != 'unpaid' }}" onclick="setStatusFilter('unpaid')">
         Unpaid
       </button>
+      <button type="button" class="btn btn-sm {{ 'btn-gradient' if status_filter == 'prev_dues' else 'btn-outline' }}" style="{{ 'color:#b91c1c;border-color:#fca5a5;' if status_filter != 'prev_dues' }}" onclick="setStatusFilter('prev_dues')">
+        ⚠️ Previous Dues
+      </button>
     </div>
   </form>
 </div>
@@ -55,9 +58,15 @@
     <div class="sb-value" style="color:#059669;">₹ {{ total_paid_sum }}</div>
   </div>
   <div class="summary-box">
-    <div class="sb-label">Total Pending Dues</div>
-    <div class="sb-value" style="color:#dc2626;">₹ {{ total_pending_sum }}</div>
+    <div class="sb-label">Current Month Pending</div>
+    <div class="sb-value" style="color:#d97706;">₹ {{ total_pending_sum }}</div>
   </div>
+  {% if total_prev_dues_sum > 0 %}
+  <div class="summary-box" style="border:1px solid #fca5a5;background:#fff5f5;">
+    <div class="sb-label" style="color:#b91c1c;font-weight:700;">⚠️ Previous Months Dues</div>
+    <div class="sb-value" style="color:#dc2626;">₹ {{ total_prev_dues_sum }}</div>
+  </div>
+  {% endif %}
 </div>
 
 <!-- Student Fee Table -->
@@ -77,7 +86,7 @@
           <th style="padding:10px;">Monthly Fee</th>
           <th style="padding:10px;">Amount Paid</th>
           <th style="padding:10px;">Balance Due</th>
-          <th style="padding:10px;">Status</th>
+          <th style="padding:10px;">Status & Alerts</th>
           <th style="padding:10px;text-align:right;">Action</th>
         </tr>
       </thead>
@@ -108,18 +117,35 @@
             ₹{{ item.pending }}
           </td>
           <td style="padding:14px 10px;">
-            {% if item.status == 'paid' %}
-            <span class="chip chip-paid">Paid</span>
-            {% elif item.status == 'partial' %}
-            <span class="chip" style="background:#fef3c7;color:#d97706;">Partial (₹{{ item.pending }} Due)</span>
-            {% else %}
-            <span class="chip chip-unpaid">Unpaid</span>
-            {% endif %}
+            <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start;">
+              {% if item.status == 'paid' %}
+              <span class="chip chip-paid">Paid ({{ month_label }})</span>
+              {% elif item.status == 'partial' %}
+              <span class="chip" style="background:#fef3c7;color:#d97706;">Partial (₹{{ item.pending }} Due)</span>
+              {% else %}
+              <span class="chip chip-unpaid">Unpaid ({{ month_label }})</span>
+              {% endif %}
+
+              {% if item.total_past_pending > 0 %}
+              <span class="chip" style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;font-weight:700;">
+                ⚠️ Prev Dues: ₹{{ item.total_past_pending }}
+                ({% for p in item.past_dues %}{{ p.month_label }}{% if not loop.last %}, {% endif %}{% endfor %})
+              </span>
+              {% endif %}
+            </div>
           </td>
           <td style="padding:14px 10px;text-align:right;">
-            <button type="button" class="btn btn-outline btn-sm" onclick="openPaymentModal({{ s.id }}, '{{ s.full_name }}', '{{ month }}', {{ item.due }}, {{ item.paid }})">
-              Update Fee
-            </button>
+            <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;">
+              {% if item.total_past_pending > 0 and item.past_dues %}
+              {% set first_prev = item.past_dues[0] %}
+              <button type="button" class="btn btn-sm" style="background:#dc2626;color:#fff;font-weight:700;border:none;" onclick="openPaymentModal({{ s.id }}, '{{ s.full_name }}', '{{ first_prev.month }}', {{ first_prev.amount_due }}, {{ first_prev.amount_paid }})">
+                Pay {{ first_prev.month_label }} (₹{{ first_prev.pending }})
+              </button>
+              {% endif %}
+              <button type="button" class="btn btn-outline btn-sm" onclick="openPaymentModal({{ s.id }}, '{{ s.full_name }}', '{{ month }}', {{ item.due }}, {{ item.paid }})">
+                Update {{ month_label }}
+              </button>
+            </div>
           </td>
         </tr>
         {% endfor %}
