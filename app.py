@@ -42,10 +42,13 @@ def init_db():
             b3 = Batch(department_id=classic.id, name="Batch 3")
             wb1 = Batch(department_id=western.id, name="Batch 1")
             cb1 = Batch(department_id=carnatic.id, name="Batch 1")
-            db.session.add_all([b1, b2, b3, wb1, cb1])
-            db.session.commit()
-
 init_db()
+
+
+# ---------- Lightweight Render Keep-Alive (NO Database Hit) ----------
+@app.route("/ping")
+def ping():
+    return "pong", 200
 
 
 # ---------- helpers ----------
