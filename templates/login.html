@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login · Prana Space of Art</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#ec4899">
+  <style>
+    :root {
+      --primary-gradient: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+      --bg: #0f0d1b;
+      --card-bg: rgba(255, 255, 255, 0.95);
+      --text: #1e1b2e;
+      --text-muted: #6b7280;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(236, 72, 153, 0.25) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.25) 0px, transparent 50%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card-bg);
+      border-radius: 24px;
+      padding: 36px 30px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+      backdrop-filter: blur(10px);
+    }
+    .brand-box {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .brand-logo {
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+      border-radius: 18px;
+      background: #fff;
+      padding: 6px;
+      box-shadow: 0 6px 20px rgba(236, 72, 153, 0.25);
+      margin-bottom: 12px;
+    }
+    .brand-name {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .brand-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+    .form-group {
+      margin-bottom: 18px;
+    }
+    label {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .form-control {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1.5px solid #e5e7eb;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .form-control:focus {
+      border-color: #ec4899;
+      box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.15);
+    }
+    .btn-login {
+      width: 100%;
+      padding: 13px;
+      border-radius: 12px;
+      border: none;
+      background: var(--primary-gradient);
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 6px 20px rgba(236, 72, 153, 0.3);
+    }
+    .btn-login:active {
+      transform: scale(0.98);
+    }
+    .alert-error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #dc2626;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 14px;
+      border-radius: 12px;
+      margin-bottom: 18px;
+      text-align: center;
+    }
+    .creds-hint {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      background: #f8f7fc;
+      padding: 10px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-card">
+  <div class="brand-box">
+    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Prana Logo" class="brand-logo">
+    <div class="brand-name">PRANA space of art</div>
+    <div class="brand-sub">Administrator Portal Access</div>
+  </div>
+
+  {% if error %}
+  <div class="alert-error">
+    {{ error }}
+  </div>
+  {% endif %}
+
+  <form method="post">
+    <div class="form-group">
+      <label>Admin ID / Username</label>
+      <input type="text" class="form-control" name="username" placeholder="Enter username (e.g. admin)" required autofocus>
+    </div>
+
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" class="form-control" name="password" placeholder="Enter password" required>
+    </div>
+
+    <button type="submit" class="btn-login">Login to Portal →</button>
+  </form>
+
+  <div class="creds-hint">
+    🔒 Authorized Personnel Only • Student Invoices Remain Public
+  </div>
+</div>
+
+</body>
+</html>

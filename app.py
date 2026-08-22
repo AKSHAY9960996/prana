@@ -2,7 +2,7 @@ import os
 from datetime import date, datetime
 from calendar import month_name
 
-from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, session
 from sqlalchemy import func
 
 from models import db, Department, Batch, Student, Fee, Attendance, AttendanceEntry, Expense
@@ -47,6 +47,48 @@ else:
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.secret_key = os.environ.get("SECRET_KEY", "prana-space-of-art-key")
+
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "prana123")
+
+
+@app.before_request
+def require_login():
+    public_endpoints = ["login", "student_bill", "ping", "static"]
+    if request.endpoint in public_endpoints or (request.path and request.path.startswith("/static/")):
+        return None
+        
+    if not session.get("admin_logged_in"):
+        return redirect(url_for("login", next=request.url))
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if session.get("admin_logged_in"):
+        return redirect(url_for("dashboard"))
+        
+    error = None
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
+        
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session["admin_logged_in"] = True
+            session.permanent = True
+            flash("Welcome back, Admin!", "success")
+            next_page = request.args.get("next") or url_for("dashboard")
+            return redirect(next_page)
+        else:
+            error = "Invalid Username or Password. Please try again."
+            
+    return render_template("login.html", error=error)
+
+
+@app.route("/logout")
+def logout():
+    session.pop("admin_logged_in", None)
+    flash("You have been logged out.", "success")
+    return redirect(url_for("login"))
 
 db.init_app(app)
 
