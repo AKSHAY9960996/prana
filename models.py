@@ -99,10 +99,16 @@ class AttendanceEntry(db.Model):
 class Expense(db.Model):
     __tablename__ = "expenses"
     id = db.Column(db.Integer, primary_key=True)
-    category = db.Column(db.String(50), nullable=False, default="Other")  # Salary, Rent, Electricity, Equipment, Maintenance, Utility, Other
+    category = db.Column(db.String(50), nullable=False)  # Salary, Rent, Electricity, Equipment, Maintenance, Utility, Other
     title = db.Column(db.String(120), nullable=False)
     amount = db.Column(db.Integer, nullable=False, default=0)
     month = db.Column(db.String(7), nullable=False)  # "2026-08"
     expense_date = db.Column(db.Date, default=date.today)
-    notes = db.Column(db.Text, default="")
+    notes = db.Column(db.String(255), default="")
 
+
+class AdminCredential(db.Model):
+    __tablename__ = "admin_credentials"
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), nullable=False, default="admin")
+    password = db.Column(db.String(120), nullable=False, default="prana123")

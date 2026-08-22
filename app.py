@@ -5,14 +5,13 @@ from calendar import month_name
 from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, session
 from sqlalchemy import func
 
-from models import db, Department, Batch, Student, Fee, Attendance, AttendanceEntry, Expense
+from models import db, Department, Batch, Student, Fee, Attendance, AttendanceEntry, Expense, AdminCredential
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app = Flask(__name__)
 
 import urllib.parse
-
 import ssl
 
 # Render PostgreSQL / Neon DB or local SQLite support
@@ -48,8 +47,17 @@ else:
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.secret_key = os.environ.get("SECRET_KEY", "prana-space-of-art-key")
 
-ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "prana123")
+
+def get_admin_credentials():
+    cred = AdminCredential.query.first()
+    if not cred:
+        cred = AdminCredential(
+            username=os.environ.get("ADMIN_USERNAME", "admin"),
+            password=os.environ.get("ADMIN_PASSWORD", "prana123")
+        )
+        db.session.add(cred)
+        db.session.commit()
+    return cred
 
 
 @app.before_request
@@ -72,7 +80,8 @@ def login():
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "").strip()
         
-        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        cred = get_admin_credentials()
+        if username == cred.username and password == cred.password:
             session["admin_logged_in"] = True
             session.permanent = True
             flash("Welcome back, Admin!", "success")
@@ -375,7 +384,36 @@ def settings():
         db.session.commit()
         flash("Settings saved.", "success")
         return redirect(url_for("settings"))
-    return render_template("settings.html", departments=departments, active_page="settings")
+    cred = get_admin_credentials()
+    return render_template("settings.html", departments=departments, admin_username=cred.username, active_page="settings")
+
+
+@app.route("/settings/credentials", methods=["POST"])
+def settings_credentials():
+    cred = get_admin_credentials()
+    current_pass = request.form.get("current_password", "").strip()
+    new_username = request.form.get("new_username", "").strip()
+    new_password = request.form.get("new_password", "").strip()
+    confirm_password = request.form.get("confirm_password", "").strip()
+
+    if current_pass != cred.password:
+        flash("Current password incorrect. Credentials were not updated.", "danger")
+        return redirect(url_for("settings"))
+
+    if not new_username:
+        flash("Username cannot be empty.", "danger")
+        return redirect(url_for("settings"))
+
+    if new_password:
+        if new_password != confirm_password:
+            flash("New password and confirmation password do not match.", "danger")
+            return redirect(url_for("settings"))
+        cred.password = new_password
+
+    cred.username = new_username
+    db.session.commit()
+    flash("Admin username & password updated successfully!", "success")
+    return redirect(url_for("settings"))
 
 
 @app.route("/batches/new", methods=["POST"])
