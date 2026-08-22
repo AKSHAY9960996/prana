@@ -16,21 +16,20 @@ import urllib.parse
 # Render PostgreSQL / Neon DB or local SQLite support
 db_url = os.environ.get("DATABASE_URL")
 if db_url:
-    if db_url.startswith("postgres://"):
-        db_url = db_url.replace("postgres://", "postgresql+pg8000://", 1)
-    elif db_url.startswith("postgresql://") and "+pg8000" not in db_url:
-        db_url = db_url.replace("postgresql://", "postgresql+pg8000://", 1)
-
     try:
         parsed = urllib.parse.urlparse(db_url)
-        query_params = urllib.parse.parse_qs(parsed.query)
-        query_params.pop("sslmode", None)
-        new_query = urllib.parse.urlencode(query_params, doseq=True)
+        # Strip query parameters (like sslmode, channel_binding) to prevent driver keyword argument mismatches
         db_url = urllib.parse.urlunparse((
-            parsed.scheme, parsed.netloc, parsed.path, parsed.params, new_query, parsed.fragment
+            "postgresql+pg8000",
+            parsed.netloc,
+            parsed.path,
+            "",
+            "",
+            ""
         ))
     except Exception:
-        pass
+        if db_url.startswith("postgres://"):
+            db_url = db_url.replace("postgres://", "postgresql+pg8000://", 1)
 
     app.config["SQLALCHEMY_DATABASE_URI"] = db_url
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True}
