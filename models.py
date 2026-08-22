@@ -94,3 +94,15 @@ class AttendanceEntry(db.Model):
     session_id = db.Column(db.Integer, db.ForeignKey("attendance_sessions.id"), nullable=False)
     student_id = db.Column(db.Integer, db.ForeignKey("students.id"), nullable=False)
     present = db.Column(db.Boolean, default=True)
+
+
+class Expense(db.Model):
+    __tablename__ = "expenses"
+    id = db.Column(db.Integer, primary_key=True)
+    category = db.Column(db.String(50), nullable=False, default="Other")  # Salary, Rent, Electricity, Equipment, Maintenance, Utility, Other
+    title = db.Column(db.String(120), nullable=False)
+    amount = db.Column(db.Integer, nullable=False, default=0)
+    month = db.Column(db.String(7), nullable=False)  # "2026-08"
+    expense_date = db.Column(db.Date, default=date.today)
+    notes = db.Column(db.Text, default="")
+

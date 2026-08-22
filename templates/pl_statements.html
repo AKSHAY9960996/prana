@@ -16,20 +16,22 @@
 
 <div class="summary-grid">
   <div class="summary-box">
-    <div class="sb-label">Total Collection</div>
-    <div class="sb-value">₹ {{ total_collection }}</div>
+    <div class="sb-label">Total Fee Collection</div>
+    <div class="sb-value" style="color:#059669;">₹ {{ total_collection }}</div>
   </div>
   <div class="summary-box">
-    <div class="sb-label">Total Fees</div>
-    <div class="sb-value">₹ {{ total_fees }}</div>
+    <div class="sb-label">Total Expenses</div>
+    <div class="sb-value" style="color:#dc2626;">₹ {{ total_expenses }}</div>
+  </div>
+  <div class="summary-box" style="border:1.5px solid {{ '#a7f3d0' if net_profit >= 0 else '#fca5a5' }};background:{{ '#f0fdf4' if net_profit >= 0 else '#fff5f5' }};">
+    <div class="sb-label" style="font-weight:700;color:{{ '#047857' if net_profit >= 0 else '#b91c1c' }};">Net Profit / Loss</div>
+    <div class="sb-value" style="color:{{ '#059669' if net_profit >= 0 else '#dc2626' }};">
+      ₹ {{ net_profit }}
+    </div>
   </div>
   <div class="summary-box">
-    <div class="sb-label">Total Paid</div>
-    <div class="sb-value" style="color:#059669;">₹ {{ total_paid }}</div>
-  </div>
-  <div class="summary-box">
-    <div class="sb-label">Total Unpaid</div>
-    <div class="sb-value" style="color:#dc2626;">₹ {{ total_unpaid }}</div>
+    <div class="sb-label">Pending Student Dues</div>
+    <div class="sb-value" style="color:#d97706;">₹ {{ total_unpaid }}</div>
   </div>
 </div>
 

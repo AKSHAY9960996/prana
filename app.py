@@ -5,7 +5,7 @@ from calendar import month_name
 from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
 from sqlalchemy import func
 
-from models import db, Department, Batch, Student, Fee, Attendance, AttendanceEntry
+from models import db, Department, Batch, Student, Fee, Attendance, AttendanceEntry, Expense
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -612,6 +612,95 @@ def attendance_save():
     return redirect(url_for("attendance_page", batch_id=batch_id, date=day_str))
 
 
+# ---------- expenses ----------
+EXPENSE_CATEGORIES = [
+    "Salary",
+    "Rent",
+    "Electricity",
+    "Equipment",
+    "Maintenance",
+    "Marketing",
+    "Utility",
+    "Other"
+]
+
+@app.route("/expenses")
+def expenses_page():
+    month = request.args.get("month") or current_month_str()
+    cat_filter = request.args.get("category", "all")
+    
+    query = Expense.query.filter_by(month=month)
+    if cat_filter != "all":
+        query = query.filter_by(category=cat_filter)
+        
+    expenses = query.order_by(Expense.expense_date.desc(), Expense.id.desc()).all()
+    
+    # Calculate category summary totals for the selected month
+    all_month_expenses = Expense.query.filter_by(month=month).all()
+    total_expense = sum(e.amount for e in all_month_expenses)
+    
+    category_breakdown = {}
+    for cat in EXPENSE_CATEGORIES:
+        category_breakdown[cat] = sum(e.amount for e in all_month_expenses if e.category == cat)
+        
+    return render_template(
+        "expenses.html",
+        expenses=expenses,
+        month=month,
+        month_label=month_label(month),
+        cat_filter=cat_filter,
+        categories=EXPENSE_CATEGORIES,
+        total_expense=total_expense,
+        category_breakdown=category_breakdown,
+        today_date=date.today().isoformat(),
+        active_page="expenses"
+    )
+
+
+@app.route("/expenses/add", methods=["POST"])
+def expense_add():
+    title = request.form.get("title", "").strip()
+    category = request.form.get("category", "Other").strip()
+    amount = int(request.form.get("amount") or 0)
+    month = request.form.get("month") or current_month_str()
+    expense_date_str = request.form.get("expense_date")
+    notes = request.form.get("notes", "").strip()
+    
+    exp_date = date.today()
+    if expense_date_str:
+        try:
+            exp_date = datetime.strptime(expense_date_str, "%Y-%m-%d").date()
+        except ValueError:
+            pass
+
+    if title and amount > 0:
+        exp = Expense(
+            title=title,
+            category=category,
+            amount=amount,
+            month=month,
+            expense_date=exp_date,
+            notes=notes
+        )
+        db.session.add(exp)
+        db.session.commit()
+        flash("Expense record added successfully.", "success")
+    else:
+        flash("Please enter a valid expense title and amount.", "danger")
+        
+    return redirect(url_for("expenses_page", month=month))
+
+
+@app.route("/expenses/<int:expense_id>/delete", methods=["POST"])
+def expense_delete(expense_id):
+    exp = Expense.query.get_or_404(expense_id)
+    m = exp.month
+    db.session.delete(exp)
+    db.session.commit()
+    flash("Expense record deleted.", "success")
+    return redirect(url_for("expenses_page", month=m))
+
+
 # ---------- P&L statements ----------
 @app.route("/pl-statements")
 def pl_statements():
@@ -634,6 +723,11 @@ def pl_statements():
     total_paid = sum(r[0].amount_paid for r in rows if r[0].status == "paid")
     total_unpaid = sum((r[0].amount_due - r[0].amount_paid) for r in rows if r[0].status != "paid")
 
+    # Fetch expenses for the month
+    month_expenses = Expense.query.filter_by(month=month).all()
+    total_expenses = sum(e.amount for e in month_expenses)
+    net_profit = total_collection - total_expenses
+
     all_batches = Batch.query.all()
 
     return render_template(
@@ -648,6 +742,9 @@ def pl_statements():
         total_fees=total_fees,
         total_paid=total_paid,
         total_unpaid=total_unpaid,
+        month_expenses=month_expenses,
+        total_expenses=total_expenses,
+        net_profit=net_profit,
         active_page="pl_statements",
     )
 

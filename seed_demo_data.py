@@ -3,9 +3,16 @@
 """
 from datetime import date
 from app import app
-from models import db, Department, Batch, Student, Fee
+from models import db, Department, Batch, Student, Fee, Expense, Attendance, AttendanceEntry
 
 with app.app_context():
+    # Clear existing data for clean re-seed
+    Expense.query.delete()
+    Fee.query.delete()
+    AttendanceEntry.query.delete()
+    Attendance.query.delete()
+    Student.query.delete()
+
     classic = Department.query.filter_by(name="Classic Dance").first()
     western = Department.query.filter_by(name="Western Dance").first()
     carnatic = Department.query.filter_by(name="Carnatic Music").first()
@@ -44,5 +51,14 @@ with app.app_context():
         Fee(student_id=students[5].id, month=this_month, amount_due=1000, amount_paid=1000, status="paid", paid_date=date.today()),
     ]
     db.session.add_all(fees)
+
+    sample_expenses = [
+        Expense(title="Studio Rent - August", category="Rent", amount=12000, month=this_month, expense_date=date.today(), notes="Monthly space lease"),
+        Expense(title="Classical Dance Instructor Salary", category="Salary", amount=8000, month=this_month, expense_date=date.today(), notes="Faculty payment"),
+        Expense(title="Western Dance Instructor Salary", category="Salary", amount=6000, month=this_month, expense_date=date.today(), notes="Faculty payment"),
+        Expense(title="BESCOM Electricity Bill", category="Electricity", amount=1500, month=this_month, expense_date=date.today(), notes="Studio lighting & AC"),
+        Expense(title="Sound System Maintenance", category="Maintenance", amount=800, month=this_month, expense_date=date.today(), notes="Speaker cable replacement")
+    ]
+    db.session.add_all(sample_expenses)
     db.session.commit()
-    print(f"Demo data seeded: {len(students)} students, {len(fees)} fee records")
+    print(f"Demo data seeded: {len(students)} students, {len(fees)} fee records, {len(sample_expenses)} expenses")
