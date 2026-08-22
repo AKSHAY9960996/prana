@@ -142,6 +142,9 @@
                 Pay {{ first_prev.month_label }} (₹{{ first_prev.pending }})
               </button>
               {% endif %}
+              <a href="{{ url_for('student_bill', student_id=s.id) }}" target="_blank" class="btn btn-sm" style="background:#25d366;color:#fff;font-weight:700;border:none;text-decoration:none;" title="View & Send WhatsApp Bill">
+                📱 Bill Link
+              </a>
               <button type="button" class="btn btn-outline btn-sm" onclick="openPaymentModal({{ s.id }}, '{{ s.full_name }}', '{{ month }}', {{ item.due }}, {{ item.paid }})">
                 Update {{ month_label }}
               </button>

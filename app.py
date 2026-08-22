@@ -355,6 +355,73 @@ def batch_delete(batch_id):
     return redirect(url_for("settings"))
 
 
+@app.route("/settings/reset-all", methods=["POST"])
+def settings_reset_all():
+    try:
+        Expense.query.delete()
+        Fee.query.delete()
+        AttendanceEntry.query.delete()
+        Attendance.query.delete()
+        Student.query.delete()
+        db.session.commit()
+        flash("All application data (students, fees, attendance, expenses) has been permanently reset.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error resetting data: {e}", "danger")
+    return redirect(url_for("settings"))
+
+
+# ---------- Digital Student Bill ----------
+@app.route("/bill/<int:student_id>")
+def student_bill(student_id):
+    student = Student.query.get_or_404(student_id)
+    this_month = current_month_str()
+    
+    # Selected month fee
+    current_fee = Fee.query.filter_by(student_id=student.id, month=this_month).first()
+    current_due = current_fee.amount_due if current_fee else student.batch.monthly_fee
+    current_paid = current_fee.amount_paid if current_fee else 0
+    current_pending = max(0, current_due - current_paid)
+    
+    # Previous months' pending fees
+    past_unpaid = Fee.query.filter_by(student_id=student.id).filter(
+        Fee.month < this_month,
+        Fee.status != "paid"
+    ).order_by(Fee.month.asc()).all()
+    
+    past_dues_list = [
+        {
+            "month": f.month,
+            "month_label": month_label(f.month),
+            "amount_due": f.amount_due,
+            "amount_paid": f.amount_paid,
+            "pending": f.amount_due - f.amount_paid
+        }
+        for f in past_unpaid if (f.amount_due - f.amount_paid) > 0
+    ]
+    
+    total_past_pending = sum(p["pending"] for p in past_dues_list)
+    grand_total_pending = current_pending + total_past_pending
+    
+    # All fee history for ledger
+    all_fees = Fee.query.filter_by(student_id=student.id).order_by(Fee.month.desc()).all()
+    
+    return render_template(
+        "student_bill.html",
+        student=student,
+        this_month=this_month,
+        month_label=month_label(this_month),
+        current_due=current_due,
+        current_paid=current_paid,
+        current_pending=current_pending,
+        past_dues_list=past_dues_list,
+        total_past_pending=total_past_pending,
+        grand_total_pending=grand_total_pending,
+        all_fees=all_fees,
+        issue_date=date.today().strftime("%b %d, %Y")
+    )
+
+
 @app.route("/api/batches/<int:department_id>")
 def api_batches(department_id):
     batches = Batch.query.filter_by(department_id=department_id).all()

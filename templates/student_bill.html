@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fee Bill — {{ student.full_name }} | Prana Space of Art</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-gradient: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+      --bg: #f5f4fa;
+      --card-bg: #ffffff;
+      --text: #1e1b2e;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 20px 12px;
+      line-height: 1.5;
+    }
+    .bill-card {
+      max-width: 560px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+      overflow: hidden;
+      border: 1px solid rgba(229, 231, 235, 0.8);
+    }
+    .bill-header {
+      background: var(--primary-gradient);
+      color: #fff;
+      padding: 28px 24px;
+      text-align: center;
+    }
+    .bill-logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 52px;
+      height: 52px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 16px;
+      margin-bottom: 10px;
+    }
+    .bill-title { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+    .bill-subtitle { font-size: 13px; opacity: 0.9; }
+    .bill-body { padding: 24px; }
+    
+    .section-title {
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .info-box {
+      background: #f8f7fc;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 13.5px;
+    }
+    .info-row:last-child { margin-bottom: 0; }
+    .info-label { color: var(--text-muted); }
+    .info-val { font-weight: 700; text-align: right; }
+
+    .due-alert-box {
+      background: #fff5f5;
+      border: 1.5px solid #fca5a5;
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .due-alert-title { font-size: 13px; font-weight: 700; color: #b91c1c; }
+    .due-alert-amount { font-size: 32px; font-weight: 800; color: #dc2626; margin: 4px 0; }
+
+    .paid-alert-box {
+      background: #f0fdf4;
+      border: 1.5px solid #a7f3d0;
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .paid-alert-title { font-size: 13px; font-weight: 700; color: #047857; }
+    .paid-alert-amount { font-size: 28px; font-weight: 800; color: #059669; margin: 4px 0; }
+
+    .table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+    .table th { text-align: left; padding: 8px; color: var(--text-muted); font-size: 11.5px; border-bottom: 2px solid var(--border); }
+    .table td { padding: 12px 8px; border-bottom: 1px solid var(--border); }
+    .chip { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .chip-paid { background: #d1fae5; color: #047857; }
+    .chip-partial { background: #fef3c7; color: #d97706; }
+    .chip-unpaid { background: #fee2e2; color: #b91c1c; }
+
+    .btn-wa {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      background: #25d366;
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px;
+      padding: 12px;
+      border-radius: 12px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    .bill-footer {
+      text-align: center;
+      padding: 16px 24px 24px;
+      font-size: 12px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<div class="bill-card">
+  <div class="bill-header">
+    <div class="bill-logo">
+      <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
+        <defs>
+          <linearGradient id="lotusGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#ffffff"/>
+            <stop offset="100%" stop-color="#fce7f3"/>
+          </linearGradient>
+        </defs>
+        <path d="M24 44c-8-3-13-10-13-18 5 2 9 6 13 12 4-6 8-10 13-12 0 8-5 15-13 18z" fill="url(#lotusGrad)"/>
+      </svg>
+    </div>
+    <div class="bill-title">PRANA SPACE OF ART</div>
+    <div class="bill-subtitle">Official Student Fee Statement & Invoice</div>
+  </div>
+
+  <div class="bill-body">
+    <!-- Student Info -->
+    <div class="section-title">Student Information</div>
+    <div class="info-box">
+      <div class="info-row">
+        <span class="info-label">Student Name</span>
+        <span class="info-val">{{ student.full_name }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Department</span>
+        <span class="info-val">{{ student.department.name }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Batch</span>
+        <span class="info-val">{{ student.batch.name }} ({{ student.batch.timing_label }})</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Contact Number</span>
+        <span class="info-val">{{ student.mobile }}</span>
+      </div>
+      {% if student.address %}
+      <div class="info-row">
+        <span class="info-label">Address</span>
+        <span class="info-val" style="max-width:240px;">{{ student.address }}</span>
+      </div>
+      {% endif %}
+      <div class="info-row">
+        <span class="info-label">Statement Date</span>
+        <span class="info-val">{{ issue_date }}</span>
+      </div>
+    </div>
+
+    <!-- Outstanding Dues Summary -->
+    {% if grand_total_pending > 0 %}
+    <div class="due-alert-box">
+      <div class="due-alert-title">⚠️ Total Outstanding Balance Due</div>
+      <div class="due-alert-amount">₹ {{ grand_total_pending }}</div>
+      <div style="font-size:12px;color:#991b1b;margin-top:4px;">
+        Includes {{ month_label }} (₹{{ current_pending }}) 
+        {% if total_past_pending > 0 %}
+        + Previous Dues (₹{{ total_past_pending }})
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <div class="paid-alert-box">
+      <div class="paid-alert-title">🎉 All Fees Fully Cleared!</div>
+      <div class="paid-alert-amount">₹ 0 Dues</div>
+      <div style="font-size:12px;color:#047857;">No pending fee payments recorded. Thank you!</div>
+    </div>
+    {% endif %}
+
+    <!-- Breakdown of Unpaid Months -->
+    {% if past_dues_list or current_pending > 0 %}
+    <div class="section-title">Pending Months Itemized Breakdown</div>
+    <div class="info-box" style="background:#fff;">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Month</th>
+            <th>Monthly Fee</th>
+            <th>Paid</th>
+            <th style="text-align:right;">Pending</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if current_pending > 0 %}
+          <tr>
+            <td><strong>{{ month_label }} (Current)</strong></td>
+            <td>₹{{ current_due }}</td>
+            <td>₹{{ current_paid }}</td>
+            <td style="text-align:right;font-weight:700;color:#dc2626;">₹{{ current_pending }}</td>
+          </tr>
+          {% endif %}
+          {% for p in past_dues_list %}
+          <tr>
+            <td><strong style="color:#b91c1c;">{{ p.month_label }} (Previous)</strong></td>
+            <td>₹{{ p.amount_due }}</td>
+            <td>₹{{ p.amount_paid }}</td>
+            <td style="text-align:right;font-weight:700;color:#dc2626;">₹{{ p.pending }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    <!-- Recent Payment History -->
+    <div class="section-title" style="margin-top:20px;">Payment Ledger History</div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th>Billed</th>
+          <th>Paid</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in all_fees %}
+        <tr>
+          <td style="font-weight:600;">{{ f.month }}</td>
+          <td>₹{{ f.amount_due }}</td>
+          <td style="font-weight:700;color:#059669;">₹{{ f.amount_paid }}</td>
+          <td>
+            {% if f.status == 'paid' %}
+            <span class="chip chip-paid">Paid</span>
+            {% elif f.status == 'partial' %}
+            <span class="chip chip-partial">Partial</span>
+            {% else %}
+            <span class="chip chip-unpaid">Unpaid</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="4" style="color:var(--text-muted);text-align:center;">No payment records logged yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <button type="button" class="btn-wa" onclick="shareViaWhatsApp()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984 0 1.763.459 3.484 1.332 5.002L2 22l5.127-1.341c1.464.798 3.117 1.218 4.881 1.219h.004c5.504 0 9.987-4.479 9.988-9.986 0-2.668-1.037-5.176-2.924-7.063C17.189 3.042 14.682 2 12.012 2zm5.836 14.288c-.244.686-1.42 1.309-1.961 1.385-.503.07-1.157.1-3.64-.925-3.176-1.31-5.22-4.529-5.378-4.741-.157-.212-1.288-1.716-1.288-3.272 0-1.556.816-2.321 1.104-2.64.288-.318.627-.397.837-.397.21 0 .419.002.6.01.192.008.452-.073.707.538.261.627.889 2.167.967 2.325.078.158.13.344.026.554-.105.21-.157.341-.314.524-.157.183-.331.408-.472.548-.157.157-.321.328-.138.643.183.314.815 1.346 1.748 2.179 1.2 1.07 2.21 1.402 2.525 1.558.314.157.497.13.68-.078.183-.209.785-.916.994-1.23.209-.314.418-.261.706-.157.288.105 1.83.863 2.143 1.02.314.157.524.235.601.366.078.131.078.76-.166 1.446z"/></svg>
+      Share Statement via WhatsApp
+    </button>
+  </div>
+
+  <div class="bill-footer">
+    Prana Space of Art • Classic Dance | Western Dance | Carnatic Music<br>
+    Thank you for being part of our arts family!
+  </div>
+</div>
+
+<script>
+function shareViaWhatsApp() {
+  const name = {{ student.full_name|tojson }};
+  const mobile = {{ student.mobile|tojson }};
+  const pending = {{ grand_total_pending|tojson }};
+  const billUrl = window.location.href;
+  
+  const cleanPhone = mobile.replace(/[^0-9]/g, '');
+  const phoneWithCode = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
+  const msg = `Hello ${name},\n\nHere is your monthly fee statement from *Prana Space of Art*:\n\n📌 Total Pending Dues: ₹${pending}\n\nView full details & receipt here:\n${billUrl}\n\nThank you!\nPrana Space of Art`;
+  
+  const waUrl = `https://api.whatsapp.com/send?phone=${phoneWithCode}&text=${encodeURIComponent(msg)}`;
+  window.open(waUrl, '_blank');
+}
+</script>
+
+</body>
+</html>
