@@ -11,13 +11,32 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app = Flask(__name__)
 
+import urllib.parse
+
 # Render PostgreSQL / Neon DB or local SQLite support
 db_url = os.environ.get("DATABASE_URL")
 if db_url:
     if db_url.startswith("postgres://"):
         db_url = db_url.replace("postgres://", "postgresql://", 1)
+        
+    has_ssl = False
+    try:
+        parsed = urllib.parse.urlparse(db_url)
+        query_params = urllib.parse.parse_qs(parsed.query)
+        has_ssl = "sslmode" in query_params or "ssl" in parsed.query
+        query_params.pop("sslmode", None)
+        new_query = urllib.parse.urlencode(query_params, doseq=True)
+        db_url = urllib.parse.urlunparse((
+            parsed.scheme, parsed.netloc, parsed.path, parsed.params, new_query, parsed.fragment
+        ))
+    except Exception:
+        has_ssl = True
+
     app.config["SQLALCHEMY_DATABASE_URI"] = db_url
-    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True}
+    engine_opts = {"pool_pre_ping": True}
+    if has_ssl:
+        engine_opts["connect_args"] = {"sslmode": "require"}
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = engine_opts
 else:
     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(BASE_DIR, 'prana.db')}"
 
