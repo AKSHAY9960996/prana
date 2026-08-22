@@ -17,26 +17,23 @@ import urllib.parse
 db_url = os.environ.get("DATABASE_URL")
 if db_url:
     if db_url.startswith("postgres://"):
-        db_url = db_url.replace("postgres://", "postgresql://", 1)
-        
-    has_ssl = False
+        db_url = db_url.replace("postgres://", "postgresql+pg8000://", 1)
+    elif db_url.startswith("postgresql://") and "+pg8000" not in db_url:
+        db_url = db_url.replace("postgresql://", "postgresql+pg8000://", 1)
+
     try:
         parsed = urllib.parse.urlparse(db_url)
         query_params = urllib.parse.parse_qs(parsed.query)
-        has_ssl = "sslmode" in query_params or "ssl" in parsed.query
         query_params.pop("sslmode", None)
         new_query = urllib.parse.urlencode(query_params, doseq=True)
         db_url = urllib.parse.urlunparse((
             parsed.scheme, parsed.netloc, parsed.path, parsed.params, new_query, parsed.fragment
         ))
     except Exception:
-        has_ssl = True
+        pass
 
     app.config["SQLALCHEMY_DATABASE_URI"] = db_url
-    engine_opts = {"pool_pre_ping": True}
-    if has_ssl:
-        engine_opts["connect_args"] = {"sslmode": "require"}
-    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = engine_opts
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True}
 else:
     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(BASE_DIR, 'prana.db')}"
 
