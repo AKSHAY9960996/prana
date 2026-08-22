@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}{{ batch.department.name }} — {{ batch.name }} Fees{% endblock %}
+{% block page_title %}{{ batch.name }} Fee Overview{% endblock %}
+{% block page_subtitle %}{{ batch.department.name }} • {{ batch.timing_label }}{% endblock %}
+
+{% block content %}
+<div style="display:flex;gap:12px;margin-bottom:20px;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+  <a href="{{ url_for('fees_page') }}" class="btn btn-outline btn-sm">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Back to Fees
+  </a>
+</div>
+
+<!-- Filters Bar -->
+<div class="card card-pad" style="margin-bottom:20px;">
+  <form method="get" id="filterForm" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <label style="font-size:13px;font-weight:700;">Select Month:</label>
+      <input class="form-control" type="month" name="month" value="{{ month }}" onchange="this.form.submit()" style="width:auto;padding:7px 12px;">
+    </div>
+
+    <!-- Status Filters -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+      <span style="font-size:13px;font-weight:700;margin-right:4px;">Filter Status:</span>
+      <input type="hidden" name="status" id="statusFilterInput" value="{{ status_filter }}">
+      
+      <button type="button" class="btn btn-sm {{ 'btn-gradient' if status_filter == 'all' else 'btn-outline' }}" onclick="setStatusFilter('all')">
+        All ({{ student_records|length }})
+      </button>
+      <button type="button" class="btn btn-sm {{ 'btn-gradient' if status_filter == 'paid' else 'btn-outline' }}" style="{{ 'color:#059669;border-color:#a7f3d0;' if status_filter != 'paid' }}" onclick="setStatusFilter('paid')">
+        Paid
+      </button>
+      <button type="button" class="btn btn-sm {{ 'btn-gradient' if status_filter == 'partial' else 'btn-outline' }}" style="{{ 'color:#d97706;border-color:#fde68a;' if status_filter != 'partial' }}" onclick="setStatusFilter('partial')">
+        Partial
+      </button>
+      <button type="button" class="btn btn-sm {{ 'btn-gradient' if status_filter == 'unpaid' else 'btn-outline' }}" style="{{ 'color:#dc2626;border-color:#fecaca;' if status_filter != 'unpaid' }}" onclick="setStatusFilter('unpaid')">
+        Unpaid
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Summary Cards -->
+<div class="summary-grid">
+  <div class="summary-box">
+    <div class="sb-label">Total Students</div>
+    <div class="sb-value">{{ total_students }}</div>
+  </div>
+  <div class="summary-box">
+    <div class="sb-label">Total Billed ({{ month_label }})</div>
+    <div class="sb-value">₹ {{ total_due_sum }}</div>
+  </div>
+  <div class="summary-box">
+    <div class="sb-label">Total Collected</div>
+    <div class="sb-value" style="color:#059669;">₹ {{ total_paid_sum }}</div>
+  </div>
+  <div class="summary-box">
+    <div class="sb-label">Total Pending Dues</div>
+    <div class="sb-value" style="color:#dc2626;">₹ {{ total_pending_sum }}</div>
+  </div>
+</div>
+
+<!-- Student Fee Table -->
+<div class="card card-pad">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <h3 class="card-title">Student Fees — {{ month_label }}</h3>
+    <div style="font-size:12.5px;color:var(--text-muted);">Showing {{ student_records|length }} record(s)</div>
+  </div>
+
+  {% if student_records %}
+  <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:13.5px;">
+      <thead>
+        <tr style="border-bottom:2px solid var(--border);text-align:left;color:var(--text-muted);font-size:12px;text-transform:uppercase;">
+          <th style="padding:10px;">Student Name</th>
+          <th style="padding:10px;">Contact & Address</th>
+          <th style="padding:10px;">Monthly Fee</th>
+          <th style="padding:10px;">Amount Paid</th>
+          <th style="padding:10px;">Balance Due</th>
+          <th style="padding:10px;">Status</th>
+          <th style="padding:10px;text-align:right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in student_records %}
+        {% set s = item.student %}
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:14px 10px;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div class="list-avatar">{{ s.initials }}</div>
+              <div>
+                <a href="{{ url_for('student_detail', student_id=s.id) }}" style="font-weight:700;color:var(--text);" onmouseover="this.style.color='var(--accent-pink)'" onmouseout="this.style.color='var(--text)'">
+                  {{ s.full_name }}
+                </a>
+                <div style="font-size:11px;color:var(--text-muted);">Enrolled: {{ s.date_of_join.strftime('%b %Y') }}</div>
+              </div>
+            </div>
+          </td>
+          <td style="padding:14px 10px;">
+            <div style="font-weight:600;">{{ s.mobile }}</div>
+            <div style="font-size:11.5px;color:var(--text-muted);">{{ s.address if s.address else 'No address recorded' }}</div>
+          </td>
+          <td style="padding:14px 10px;font-weight:600;">₹{{ item.due }}</td>
+          <td style="padding:14px 10px;font-weight:700;color:{{ '#059669' if item.paid > 0 else 'inherit' }};">
+            ₹{{ item.paid }}
+          </td>
+          <td style="padding:14px 10px;font-weight:700;color:{{ '#dc2626' if item.pending > 0 else '#059669' }};">
+            ₹{{ item.pending }}
+          </td>
+          <td style="padding:14px 10px;">
+            {% if item.status == 'paid' %}
+            <span class="chip chip-paid">Paid</span>
+            {% elif item.status == 'partial' %}
+            <span class="chip" style="background:#fef3c7;color:#d97706;">Partial (₹{{ item.pending }} Due)</span>
+            {% else %}
+            <span class="chip chip-unpaid">Unpaid</span>
+            {% endif %}
+          </td>
+          <td style="padding:14px 10px;text-align:right;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="openPaymentModal({{ s.id }}, '{{ s.full_name }}', '{{ month }}', {{ item.due }}, {{ item.paid }})">
+              Update Fee
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="es-icon">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l3 3v15H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+    </div>
+    <p>No student fee records found matching status filter "{{ status_filter|capitalize }}".</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Fee Modal -->
+<div class="overlay" id="payModalOverlay"></div>
+<div class="card card-pad" id="payModal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:110;width:90%;max-width:440px;box-shadow:0 10px 40px rgba(0,0,0,0.25);">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <h4 style="margin:0;font-size:16px;font-weight:800;" id="modalStudentTitle">Update Fee Payment</h4>
+    <button type="button" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);" onclick="closePaymentModal()">&times;</button>
+  </div>
+
+  <form method="post" action="{{ url_for('fee_add') }}">
+    <input type="hidden" name="student_id" id="modalStudentId">
+    <input type="hidden" name="month" id="modalMonthStr">
+    <input type="hidden" name="next_url" value="{{ request.url }}">
+
+    <div class="form-group">
+      <label>Month</label>
+      <input class="form-control" type="text" id="modalMonthDisplay" readonly style="background:#f8f7fc;">
+    </div>
+    <div class="form-group">
+      <label>Monthly Fee Amount Due (₹)</label>
+      <input class="form-control" type="number" name="amount_due" id="modalAmountDue" required>
+    </div>
+    <div class="form-group">
+      <label>Amount Paid by Student (₹)</label>
+      <input class="form-control" type="number" name="amount_paid" id="modalAmountPaid" placeholder="e.g. 300" required>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button type="button" class="btn btn-outline btn-block" onclick="closePaymentModal()">Cancel</button>
+      <button type="submit" class="btn btn-gradient btn-block">Save Fee</button>
+    </div>
+  </form>
+</div>
+
+<script>
+function setStatusFilter(status) {
+  document.getElementById('statusFilterInput').value = status;
+  document.getElementById('filterForm').submit();
+}
+
+function openPaymentModal(studentId, studentName, monthStr, due, paid) {
+  document.getElementById('modalStudentId').value = studentId;
+  document.getElementById('modalStudentTitle').innerText = 'Update Fee — ' + studentName;
+  document.getElementById('modalMonthStr').value = monthStr;
+  document.getElementById('modalMonthDisplay').value = monthStr;
+  document.getElementById('modalAmountDue').value = due;
+  document.getElementById('modalAmountPaid').value = paid || due;
+  document.getElementById('payModalOverlay').style.display = 'block';
+  document.getElementById('payModal').style.display = 'block';
+}
+
+function closePaymentModal() {
+  document.getElementById('payModalOverlay').style.display = 'none';
+  document.getElementById('payModal').style.display = 'none';
+}
+
+document.getElementById('payModalOverlay').addEventListener('click', closePaymentModal);
+</script>
+{% endblock %}

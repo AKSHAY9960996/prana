@@ -434,6 +434,68 @@ def fees_page():
     )
 
 
+@app.route("/fees/batch/<int:batch_id>")
+def batch_fees_page(batch_id):
+    batch = Batch.query.get_or_404(batch_id)
+    month = request.args.get("month") or current_month_str()
+    status_filter = request.args.get("status", "all")  # all | paid | partial | unpaid
+    
+    # All active students in batch
+    students_in_batch = Student.query.filter_by(batch_id=batch.id, active=True).order_by(Student.full_name).all()
+    
+    student_records = []
+    total_due_sum = 0
+    total_paid_sum = 0
+    total_pending_sum = 0
+    
+    for s in students_in_batch:
+        fee_rec = Fee.query.filter_by(student_id=s.id, month=month).first()
+        due = fee_rec.amount_due if fee_rec else batch.monthly_fee
+        paid = fee_rec.amount_paid if fee_rec else 0
+        pending = max(0, due - paid)
+        
+        if paid >= due and due > 0:
+            status = "paid"
+        elif paid > 0:
+            status = "partial"
+        else:
+            status = "unpaid"
+            
+        total_due_sum += due
+        total_paid_sum += paid
+        total_pending_sum += pending
+        
+        # Filter logic
+        if status_filter != "all":
+            if status_filter == "pending" and status not in ("partial", "unpaid"):
+                continue
+            elif status_filter != "pending" and status != status_filter:
+                continue
+                
+        student_records.append({
+            "student": s,
+            "due": due,
+            "paid": paid,
+            "pending": pending,
+            "status": status,
+            "fee_id": fee_rec.id if fee_rec else None
+        })
+        
+    return render_template(
+        "batch_fees.html",
+        batch=batch,
+        month=month,
+        month_label=month_label(month),
+        status_filter=status_filter,
+        student_records=student_records,
+        total_students=len(students_in_batch),
+        total_due_sum=total_due_sum,
+        total_paid_sum=total_paid_sum,
+        total_pending_sum=total_pending_sum,
+        active_page="fees"
+    )
+
+
 @app.route("/fees/add", methods=["POST"])
 def fee_add():
     student_id = int(request.form["student_id"])

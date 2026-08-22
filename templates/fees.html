@@ -157,13 +157,16 @@ async function selectDept(deptId, el) {
   const batches = await res.json();
   const list = document.getElementById('batchList');
   list.innerHTML = batches.map(b => `
-    <label class="batch-option" onclick="selectBatch(${b.id}, ${b.fee}, this)">
+    <div class="batch-option" onclick="selectBatch(${b.id}, ${b.fee}, this)">
       <div>
         <div class="bt-name">${b.name}</div>
-        <div class="bt-time">${b.timing}</div>
+        <div class="bt-time">${b.timing} · ₹${b.fee}/mo</div>
       </div>
-      <input type="radio" name="batchRadio">
-    </label>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <a href="/fees/batch/${b.id}" class="btn btn-outline btn-sm" onclick="event.stopPropagation()">View Batch Fees →</a>
+        <input type="radio" name="batchRadio">
+      </div>
+    </div>
   `).join('') || '<p style="color:var(--text-muted);">No batches yet. Add one from Settings.</p>';
 }
 
