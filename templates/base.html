@@ -7,6 +7,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<!-- PWA Support -->
+<link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+<meta name="theme-color" content="#ec4899">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='images/icon-192.png') }}">
 </head>
 <body>
 <div class="app-shell">
@@ -15,16 +21,7 @@
 
   <aside class="sidebar" id="sidebar">
     <div class="brand">
-      <svg class="logo-mark" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="lotusGrad" x1="0" y1="0" x2="48" y2="48">
-            <stop offset="0%" stop-color="#ec4899"/>
-            <stop offset="100%" stop-color="#8b5cf6"/>
-          </linearGradient>
-        </defs>
-        <path d="M24 44c-8-3-13-10-13-18 5 2 9 6 13 12 4-6 8-10 13-12 0 8-5 15-13 18z" fill="url(#lotusGrad)"/>
-        <path d="M24 26c-6-4-9-10-8-17 6 1 11 5 13 11 2-6 7-10 13-11 1 7-2 13-8 17-2-2-4-2-5 0-1-2-3-2-5 0z" fill="url(#lotusGrad)" opacity="0.85"/>
-      </svg>
+      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Prana Logo" class="logo-mark" style="width:42px;height:42px;object-fit:contain;border-radius:10px;background:#fff;padding:2px;">
       <div class="brand-text">
         <div class="brand-name">PRANA</div>
         <div class="brand-sub">space of art</div>
@@ -94,6 +91,10 @@
         </div>
       </div>
       <div class="topbar-right">
+        <button class="btn btn-sm" id="pwaInstallBtn" style="display:none;background:#ec4899;color:#fff;font-weight:700;border:none;align-items:center;gap:6px;" onclick="installPWA()">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Install App
+        </button>
         <button class="btn btn-outline btn-sm" style="display:flex;">
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>
           Send Report
@@ -139,6 +140,39 @@
 </nav>
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+<!-- PWA Service Worker & Install Script -->
+<script>
+let deferredPrompt;
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/static/sw.js')
+      .then(reg => console.log('PWA ServiceWorker registered:', reg.scope))
+      .catch(err => console.log('PWA ServiceWorker failed:', err));
+  });
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const btn = document.getElementById('pwaInstallBtn');
+  if (btn) btn.style.display = 'inline-flex';
+});
+
+function installPWA() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('User accepted PWA install');
+      }
+      deferredPrompt = null;
+      document.getElementById('pwaInstallBtn').style.display = 'none';
+    });
+  }
+}
+</script>
+
 {% block scripts %}{% endblock %}
 </body>
 </html>
