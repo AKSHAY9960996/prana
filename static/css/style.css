@@ -56,25 +56,33 @@ button { font-family: inherit; cursor: pointer; }
 }
 
 /* Desktop Collapsed Sidebar State */
+html.sidebar-is-collapsed .sidebar,
 .sidebar.collapsed {
   width: 76px;
   padding: 24px 10px;
 }
+html.sidebar-is-collapsed .sidebar .brand-text,
+html.sidebar-is-collapsed .sidebar .nav-label,
+html.sidebar-is-collapsed .sidebar .nav-text,
+html.sidebar-is-collapsed .sidebar .user-text,
 .sidebar.collapsed .brand-text,
 .sidebar.collapsed .nav-label,
 .sidebar.collapsed .nav-text,
 .sidebar.collapsed .user-text {
   display: none !important;
 }
+html.sidebar-is-collapsed .sidebar .brand,
 .sidebar.collapsed .brand {
   justify-content: center;
   padding-left: 0;
   padding-right: 0;
 }
+html.sidebar-is-collapsed .sidebar .nav-item,
 .sidebar.collapsed .nav-item {
   justify-content: center;
   padding: 12px;
 }
+html.sidebar-is-collapsed .sidebar .sidebar-footer,
 .sidebar.collapsed .sidebar-footer {
   justify-content: center;
   padding: 8px;
@@ -142,6 +150,7 @@ button { font-family: inherit; cursor: pointer; }
   min-width: 0;
   transition: margin-left .25s ease;
 }
+html.sidebar-is-collapsed .main,
 .main.expanded {
   margin-left: 76px;
 }

@@ -7,22 +7,24 @@ document.addEventListener('DOMContentLoaded', () => {
   // Restore saved desktop sidebar preference
   if (window.innerWidth > 760) {
     const isCollapsed = localStorage.getItem('sidebar_collapsed') === 'true';
-    if (isCollapsed && sidebar && main) {
-      sidebar.classList.add('collapsed');
-      main.classList.add('expanded');
+    if (isCollapsed) {
+      document.documentElement.classList.add('sidebar-is-collapsed');
+      if (sidebar) sidebar.classList.add('collapsed');
+      if (main) main.classList.add('expanded');
     }
   }
 
   function toggleSidebar() {
     if (window.innerWidth > 760) {
       // Desktop toggle
-      const isCollapsed = sidebar.classList.toggle('collapsed');
-      main.classList.toggle('expanded', isCollapsed);
+      const isCollapsed = document.documentElement.classList.toggle('sidebar-is-collapsed');
+      if (sidebar) sidebar.classList.toggle('collapsed', isCollapsed);
+      if (main) main.classList.toggle('expanded', isCollapsed);
       localStorage.setItem('sidebar_collapsed', isCollapsed ? 'true' : 'false');
     } else {
       // Mobile drawer toggle
-      sidebar.classList.toggle('open');
-      overlay.classList.toggle('open');
+      if (sidebar) sidebar.classList.toggle('open');
+      if (overlay) overlay.classList.toggle('open');
     }
   }
 
