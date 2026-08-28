@@ -1,8 +1,10 @@
 import os
+import csv
+from io import StringIO
 from datetime import date, datetime
 from calendar import month_name
 
-from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, session
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, session, make_response
 from sqlalchemy import func
 
 from models import db, Department, Batch, Student, Fee, Attendance, AttendanceEntry, Expense, AdminCredential
@@ -385,7 +387,10 @@ def settings():
                 batch.start_time = request.form.get(f"{prefix}start", "").strip()
                 batch.end_time = request.form.get(f"{prefix}end", "").strip()
                 fee = request.form.get(f"{prefix}fee", "0").strip()
-                batch.monthly_fee = int(fee) if fee.isdigit() else 0
+                try:
+                    batch.monthly_fee = int(float(fee)) if fee else 0
+                except (ValueError, TypeError):
+                    batch.monthly_fee = 0
         db.session.commit()
         flash("Settings saved.", "success")
         return redirect(url_for("settings"))
@@ -907,6 +912,93 @@ def pl_statements():
         net_profit=net_profit,
         active_page="pl_statements",
     )
+
+
+# ---------- CSV / Excel Export Endpoints ----------
+@app.route("/export/students")
+def export_students():
+    si = StringIO()
+    si.write("\ufeff")  # UTF-8 BOM for Excel
+    writer = csv.writer(si)
+    writer.writerow(["Student ID", "Full Name", "Mobile Number", "Address", "Department", "Batch", "Joining Date", "Status"])
+    
+    students = Student.query.order_by(Student.full_name).all()
+    for s in students:
+        writer.writerow([
+            s.id,
+            s.full_name,
+            s.mobile,
+            s.address or "",
+            s.department.name if s.department else "",
+            s.batch.name if s.batch else "",
+            s.date_of_join.strftime("%Y-%m-%d") if s.date_of_join else "",
+            "Active" if s.active else "Inactive"
+        ])
+    
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = f"attachment; filename=Prana_Students_Roster_{date.today().strftime('%Y%m%d')}.csv"
+    output.headers["Content-type"] = "text/csv; charset=utf-8"
+    return output
+
+
+@app.route("/export/fees")
+def export_fees():
+    si = StringIO()
+    si.write("\ufeff")  # UTF-8 BOM for Excel
+    writer = csv.writer(si)
+    writer.writerow(["Fee ID", "Student Name", "Mobile Number", "Department", "Batch", "Month", "Amount Due (INR)", "Amount Paid (INR)", "Balance Pending (INR)", "Payment Status", "Paid Date"])
+    
+    fees = db.session.query(Fee, Student, Batch, Department)\
+        .join(Student, Fee.student_id == Student.id)\
+        .join(Batch, Student.batch_id == Batch.id)\
+        .join(Department, Batch.department_id == Department.id)\
+        .order_by(Fee.month.desc(), Student.full_name.asc()).all()
+        
+    for f, s, b, d in fees:
+        pending = f.amount_due - f.amount_paid
+        writer.writerow([
+            f.id,
+            s.full_name,
+            s.mobile,
+            d.name,
+            b.name,
+            f.month,
+            f.amount_due,
+            f.amount_paid,
+            pending if pending > 0 else 0,
+            f.status.capitalize(),
+            f.paid_date.strftime("%Y-%m-%d") if f.paid_date else ""
+        ])
+        
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = f"attachment; filename=Prana_Fee_Records_{date.today().strftime('%Y%m%d')}.csv"
+    output.headers["Content-type"] = "text/csv; charset=utf-8"
+    return output
+
+
+@app.route("/export/expenses")
+def export_expenses():
+    si = StringIO()
+    si.write("\ufeff")  # UTF-8 BOM for Excel
+    writer = csv.writer(si)
+    writer.writerow(["Expense ID", "Date", "Month", "Category", "Title", "Amount (INR)", "Notes"])
+    
+    expenses = Expense.query.order_by(Expense.expense_date.desc()).all()
+    for e in expenses:
+        writer.writerow([
+            e.id,
+            e.expense_date.strftime("%Y-%m-%d") if e.expense_date else "",
+            e.month or "",
+            e.category or "",
+            e.title or "",
+            e.amount,
+            e.notes or ""
+        ])
+        
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = f"attachment; filename=Prana_Expenses_Log_{date.today().strftime('%Y%m%d')}.csv"
+    output.headers["Content-type"] = "text/csv; charset=utf-8"
+    return output
 
 
 if __name__ == "__main__":
